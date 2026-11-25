@@ -1,0 +1,52 @@
+<?php
+
+namespace App\Http\Controllers;
+
+use App\Http\Requests\SupplierRequest;
+use App\Models\Supplier;
+
+class SupplierController extends Controller
+{
+    public function index()
+    {
+        $suppliers = Supplier::orderBy('name')->paginate(10);
+
+        return view('suppliers.index', compact('suppliers'));
+    }
+
+    public function create()
+    {
+        return view('suppliers.create');
+    }
+
+    public function store(SupplierRequest $request)
+    {
+        Supplier::create($request->validated());
+
+        return redirect()->route('suppliers.index')->with('success', 'Supplier berhasil ditambahkan.');
+    }
+
+    public function edit(Supplier $supplier)
+    {
+        return view('suppliers.edit', compact('supplier'));
+    }
+
+    public function update(SupplierRequest $request, Supplier $supplier)
+    {
+        $supplier->update($request->validated());
+
+        return redirect()->route('suppliers.index')->with('success', 'Supplier berhasil diperbarui.');
+    }
+
+    public function destroy(Supplier $supplier)
+    {
+        if ($supplier->purchaseOrders()->exists()) {
+            return redirect()->route('suppliers.index')
+                ->with('error', 'Supplier ' . $supplier->name . ' tidak dapat dihapus karena sudah memiliki riwayat pembelian.');
+        }
+
+        $supplier->delete();
+
+        return redirect()->route('suppliers.index')->with('success', 'Supplier berhasil dihapus.');
+    }
+}
